@@ -50,8 +50,8 @@ def set_target_attitude(roll, pitch, yaw):
 
 print("Start")
 # Create the connection
-master = mavutil.mavlink_connection('udpin:0.0.0.0  :14550')
-
+master = mavutil.mavlink_connection('udpout:0.0.0.0:9000')
+print("Start master")
 boot_time = time.time()
 # Wait a heartbeat before sending commands
 master.wait_heartbeat()
