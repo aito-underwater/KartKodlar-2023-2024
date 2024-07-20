@@ -31,4 +31,4 @@ master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
 # command servo_1 to go from min to max in steps of 50us, over 2 seconds
 for us in range(1100, 1900, 50):
     set_servo_pwm(1, us)
-    time.sleep(0.125)
+    time.sleep(0.5)
