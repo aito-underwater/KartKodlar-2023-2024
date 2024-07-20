@@ -9,5 +9,5 @@ from pymavlink import mavutil
 # Need to provide the serial port and baudrate
 master = mavutil.mavlink_connection("/dev/ttyAMA0", baud=115200)
 
-# Restart the ArduSub board !
+# Restart the ArduSub board !   
 master.reboot_autopilot()
