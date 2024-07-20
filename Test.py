@@ -1,6 +1,6 @@
 from pymavlink import mavutil
 
-master = mavutil.mavlink_connection('/dev/ttyACM1', baud=57600)
+master = mavutil.mavlink_connection('UDPOUT:0.0.0.0:9000')
 
 master.wait_heartbeat()
 print("Connected")
