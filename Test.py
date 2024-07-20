@@ -3,7 +3,7 @@ from pymavlink import mavutil
 master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
 
 master.wait_heartbeat()
-print("Bağlantı kuruldu")
+print("Connected")
 
 def set_mode(mode):
     # Mode listesi
