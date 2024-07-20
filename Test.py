@@ -5,6 +5,7 @@ from pymavlink import mavutil
 
 def main():
     master = mavutil.mavlink_connection('udp:127.0.0.1:14550')
+    print("Connected")
 
     master.wait_heartbeat()
     print("Heartbeat received from system (system %u component %u)" % (master.target_system, master.target_component))
