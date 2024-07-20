@@ -1,45 +1,57 @@
-import time
-
 from pymavlink import mavutil
 
+# MAVProxy'ye bağlan
+master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
 
-def main():
-    # master = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
-    master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=921600)
-    print("Connected")
+# Bağlantı kurulduğunu doğrula
+master.wait_heartbeat()
+print("Bağlantı kuruldu")
 
-    master.wait_heartbeat()  # 30 saniye bekleyin
-    print("Heartbeat received from system (system %u component %u)" % (master.target_system, master.target_component))
+# Aracı stabilize moduna geçir
+def set_mode(mode):
+    # Mode listesi
+    mode_mapping = {
+        'STABILIZE': 0,
+        'GUIDED': 4,
+        'LOITER': 5,
+        'RTL': 6,
+        'AUTO': 10,
+    }
 
-    master.mav.command_long_send(master.target_system, master.target_component,
-                                 mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-                                 0, 1, 0, 0, 0, 0, 0, 0)
+    if mode not in mode_mapping:
+        print(f"Mod {mode} geçersiz.")
+        return
 
-    # Arm durumunu kontrol et
-    print("Waiting for the vehicle to arm...")
-    master.motors_armed_wait()
-    print("Motors are armed!")
+    # Modu değiştir
+    master.set_mode(mode_mapping[mode])
+    print(f"Mod {mode} olarak değiştirildi.")
 
-    throttle = 1500
-    for _ in range(4):
-        master.mav.rc_channels_override_send(master.target_system, master.target_component,
-                                             throttle, throttle, throttle, throttle,
-                                             0, 0, 0, 0)
-    print("Motors are running at throttle:", throttle)
+# Aracı arm (motorları çalıştır)
+def arm_vehicle():
+    master.arducopter_arm()
+    print("Araç arm yapıldı.")
 
-    time.sleep(10)
+# Aracı disarm (motorları durdur)
+def disarm_vehicle():
+    master.arducopter_disarm()
+    print("Araç disarm yapıldı.")
 
-    throttle = 1000
-    for _ in range(4):
-        master.mav.rc_channels_override_send(master.target_system, master.target_component,
-                                             throttle, throttle, throttle, throttle,
-                                             0, 0, 0, 0)
+# Takeoff komutu gönder
+def takeoff(altitude):
+    # Arm motorları
+    arm_vehicle()
+    # Kalkış komutu
+    master.mav.command_long_send(
+        master.target_system,
+        master.target_component,
+        mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
+        0,
+        0, 0, 0, 0, 0, 0, altitude
+    )
+    print(f"{altitude} metreye kalkış yapılıyor.")
 
-    master.mav.command_long_send(master.target_system, master.target_component,
-                                 mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-                                 0, 0, 0, 0, 0, 0, 0, 0)
-    print("Motors are stopped and disarmed.")
-
-
-if __name__ == "__main__":
-    main()
+# Örnek kullanımlar
+set_mode('STABILIZE')
+arm_vehicle()
+takeoff(10)
+disarm_vehicle()
