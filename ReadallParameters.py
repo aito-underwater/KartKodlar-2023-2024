@@ -15,12 +15,14 @@ from pymavlink import mavutil
 # Create the connection
 master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
 # Wait a heartbeat before sending commands
+print("Waiting heartbeat")
 master.wait_heartbeat()
 
 # Request all parameters
 master.mav.param_request_list_send(
     master.target_system, master.target_component
 )
+print("Getting Params")
 while True:
     time.sleep(0.01)
     try:
