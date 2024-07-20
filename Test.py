@@ -1,48 +1,45 @@
-"""
-Example of how to connect to the autopilot by using mavproxy's
---udpin:0.0.0.0:9000 endpoint from the companion computer itself
-"""
-
-# Disable "Bare exception" warning
-# pylint: disable=W0702
-
-import time
+import sys
 # Import mavutil
 from pymavlink import mavutil
 
-def wait_conn():
-    """
-    Sends a ping to stabilish the UDP communication and awaits for a response
-    """
-    msg = None
-    while not msg:
-        master.mav.ping_send(
-            int(time.time() * 1e6), # Unix time in microseconds
-            0, # Ping number
-            0, # Request ping of all systems
-            0 # Request ping of all components
-        )
-        msg = master.recv_match()
-        time.sleep(0.5)
-
 # Create the connection
-#  Companion is already configured to allow script connections under the port 9000
-# Note: The connection is done with 'udpout' and not 'udpin'.
-#  You can check in http:192.168.1.2:2770/mavproxy that the communication made for 9000
-#  uses a 'udp' (server) and not 'udpout' (client).
-master = mavutil.mavlink_connection('udpout:0.0.0.0:9000')
+master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+# Wait a heartbeat before sending commands
+master.wait_heartbeat()
 
-# Send a ping to start connection and wait for any reply.
-#  This function is necessary when using 'udpout',
-#  as described before, 'udpout' connects to 'udpin',
-#  and needs to send something to allow 'udpin' to start
-#  sending data.
-wait_conn()
+# Choose a mode
+mode = 'STABILIZE'
 
-# Get some information !
+# Check if mode is available
+if mode not in master.mode_mapping():
+    print('Unknown mode : {}'.format(mode))
+    print('Try:', list(master.mode_mapping().keys()))
+    sys.exit(1)
+
+# Get mode ID
+mode_id = master.mode_mapping()[mode]
+# Set new mode
+# master.mav.command_long_send(
+#    master.target_system, master.target_component,
+#    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+#    0, mode_id, 0, 0, 0, 0, 0) or:
+# master.set_mode(mode_id) or:
+master.mav.set_mode_send(
+    master.target_system,
+    mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+    mode_id)
+
 while True:
-    try:
-        print(master.recv_match().to_dict())
-    except:
-        pass
-    time.sleep(0.1)
+    # Wait for ACK command
+    # Would be good to add mechanism to avoid endlessly blocking
+    # if the autopilot sends a NACK or never receives the message
+    ack_msg = master.recv_match(type='COMMAND_ACK', blocking=True)
+    ack_msg = ack_msg.to_dict()
+
+    # Continue waiting if the acknowledged command is not `set_mode`
+    if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+        continue
+
+    # Print the ACK result !
+    print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
+    break
