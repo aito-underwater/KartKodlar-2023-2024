@@ -4,9 +4,8 @@ from pymavlink import mavutil
 
 
 def main():
-    master = mavutil.mavlink_connection('udp:192.168.1.100:14550')
-
-    # master = mavutil.mavlink_connection('/dev/ttyACM0', baud=115200)
+    # master = mavutil.mavlink_connection('udp:127.0.0.1:14550')
+    master = mavutil.mavlink_connection('/dev/ttyACM0', baud=57600)
     print("Connected")
 
 
