@@ -50,10 +50,11 @@ def set_target_attitude(roll, pitch, yaw):
 
 # Create the connection
 master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+
 boot_time = time.time()
 # Wait a heartbeat before sending commands
 master.wait_heartbeat()
-
+print("Wait a heartbeat before sending commands")
 # Arm ArduSub autopilot and wait until confirmed
 master.arducopter_arm()
 master.motors_armed_wait()
@@ -66,6 +67,7 @@ while not master.wait_heartbeat().custom_mode == DEPTH_HOLD_MODE:
 
 # Set a depth target
 set_target_depth(-0.3)
+print("Setting params")
 
 # Move forward at 0.5 m/s for 2 seconds (total 1 meter)
 set_target_velocity(0.5, 0, 0)  # Move forward at 0.5 m/s
@@ -73,6 +75,7 @@ time.sleep(2)  # Move for 2 seconds
 
 # Stop the vehicle
 set_target_velocity(0, 0, 0)
+
 
 # Clean up (disarm) at the end
 master.arducopter_disarm()
