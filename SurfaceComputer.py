@@ -29,6 +29,21 @@ def set_servo_pwm(servo_n, microseconds):
 # Create the connection
 master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
 # command servo_1 to go from min to max in steps of 50us, over 2 seconds
+
+master.mav.command_long_send(
+    master.target_system,
+    master.target_component,
+    mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+    0,
+    1, 0, 0, 0, 0, 0, 0)
+
+# wait until arming confirmed (can manually check with master.motors_armed())
+print("Waiting for the vehicle to arm")
+master.motors_armed_wait()
+print('Armed!')
+
+time.sleep(2)
+
 for us in range(1100, 1900, 50):
     set_servo_pwm(1, us)
     time.sleep(0.5)
