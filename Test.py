@@ -7,14 +7,11 @@ def connect_pixhawk(port="/dev/ttyACM0", baudrate=115200):
         master = mavutil.mavlink_connection(port, baud=baudrate)
 
         master.wait_heartbeat()
-        print("Bağlantı başarılı!")
 
         master.reboot_autopilot()
-        print("Pixhawk yeniden başlatıldı.")
-
+        print("adsadsa")
         return master
     except Exception as e:
-        print(f"Bağlantı başarısız: {e}")
         return None
 
 
