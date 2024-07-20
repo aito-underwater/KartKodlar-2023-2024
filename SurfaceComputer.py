@@ -31,10 +31,11 @@ master = mavutil.mavlink_connection('udpout:0.0.0.0:9000')
 #  sending data.
 wait_conn()
 
-# Get some information !
-while True:
-    try:
-        print(master.recv_match().to_dict())
-    except:
-        pass
-    time.sleep(0.1)
+master.reboot_autopilot()
+# # Get some information !
+# while True:
+#     try:
+#         print(master.recv_match().to_dict())
+#     except:
+#         pass
+#     time.sleep(0.1)
