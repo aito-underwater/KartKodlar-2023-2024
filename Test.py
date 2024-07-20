@@ -1,6 +1,6 @@
 from pymavlink import mavutil
 
-master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+master = mavutil.mavlink_connection('http:192.168.2.2:2770/mavproxy')
 
 master.wait_heartbeat()
 print("Connected")
