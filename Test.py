@@ -5,7 +5,7 @@ from pymavlink import mavutil
 
 def main():
     # master = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
-    master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
+    master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=921600)
     print("Connected")
 
     master.wait_heartbeat()  # 30 saniye bekleyin
