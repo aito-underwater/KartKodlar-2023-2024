@@ -3,7 +3,7 @@ from pymavlink import mavutil
 
 def connect_pixhawk(port="/dev/ttyACM0", baudrate=115200):
     try:
-        # Pixhawk'a bağlantı oluştur
+
         master = mavutil.mavlink_connection(port, baud=baudrate)
 
         # Bağlantının kurulduğunu bekleyin (heartbeat bekle)
