@@ -3,7 +3,7 @@ import sys
 from pymavlink import mavutil
 
 # Create the connection
-master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
+master = mavutil.mavlink_connection('udpout:0.0.0.0:9000')
 # Wait a heartbeat before sending commands
 master.wait_heartbeat()
 
