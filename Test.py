@@ -1,8 +1,8 @@
 from pymavlink import mavutil
 
-master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
+master = mavutil.mavlink_connection('/dev/ttyACM1', baud=57600)
 
-master.wait_heartbeat()
+master.wait_heartbeaxt()
 print("Connected")
 
 def set_mode(mode):
