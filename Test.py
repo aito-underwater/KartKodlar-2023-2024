@@ -16,7 +16,7 @@ def set_mode(mode):
     }
 
     if mode not in mode_mapping:
-        print(f"1")
+        print("sasd1")
         return
 
     master.set_mode(mode_mapping[mode])
