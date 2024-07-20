@@ -8,7 +8,7 @@ def main():
     master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
     print("Connected")
 
-    master.wait_heartbeat(timeout=30)  # 30 saniye bekleyin
+    master.wait_heartbeat()  # 30 saniye bekleyin
     print("Heartbeat received from system (system %u component %u)" % (master.target_system, master.target_component))
 
     master.mav.command_long_send(master.target_system, master.target_component,
