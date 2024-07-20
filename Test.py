@@ -1,6 +1,6 @@
 from pymavlink import mavutil
 
-master = mavutil.mavlink_connection('UDPOUT:0.0.0.0:9000')
+master = mavutil.mavlink_connection('udpout:0.0.0.0:9000')
 
 master.wait_heartbeat()
 print("Connected")
