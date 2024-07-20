@@ -16,11 +16,11 @@ def set_mode(mode):
     }
 
     if mode not in mode_mapping:
-        print(f"Mod {mode} geçersiz.")
+        print(f"1")
         return
 
     master.set_mode(mode_mapping[mode])
-    print(f"Mod {mode} olarak değiştirildi.")
+    print(f"Mode {mode} olarak değiştirirdi")
 
 def arm_vehicle():
     master.arducopter_arm()
@@ -29,7 +29,7 @@ def arm_vehicle():
 
 def disarm_vehicle():
     master.arducopter_disarm()
-    print("Araç disarm yapıldı.")
+    print("Araç dısarm yapıld.")
 
 def takeoff(altitude):
     arm_vehicle()
@@ -41,7 +41,7 @@ def takeoff(altitude):
         0,
         0, 0, 0, 0, 0, 0, altitude
     )
-    print(f"{altitude} metreye kalkış yapılıyor.")
+    print(f"{altitude} Metreye kalkış yapıyor.")
 
 set_mode('STABILIZE')
 arm_vehicle()
