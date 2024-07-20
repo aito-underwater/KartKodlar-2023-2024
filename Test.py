@@ -6,11 +6,9 @@ def connect_pixhawk(port="/dev/ttyACM0", baudrate=115200):
 
         master = mavutil.mavlink_connection(port, baud=baudrate)
 
-        # Bağlantının kurulduğunu bekleyin (heartbeat bekle)
         master.wait_heartbeat()
         print("Bağlantı başarılı!")
 
-        # Pixhawk'ı yeniden başlat (isteğe bağlı, sadece bağlantıyı test etmek için)
         master.reboot_autopilot()
         print("Pixhawk yeniden başlatıldı.")
 
@@ -21,7 +19,6 @@ def connect_pixhawk(port="/dev/ttyACM0", baudrate=115200):
 
 
 if _name_ == "_main_":
-    # Pixhawk'a bağlantıyı test et
     master = connect_pixhawk()
 
     if master:
