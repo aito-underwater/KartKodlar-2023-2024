@@ -1,68 +1,35 @@
 import time
-
+# Import mavutil
 from pymavlink import mavutil
 
+def set_servo_pwm(servo_n, microseconds):
+    """ Sets AUX 'servo_n' output PWM pulse-width.
 
-class Vehicle:
-    def _init_(self, link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type):
-        self.link = link
-        self.vehicle_id = vehicle_id
-        self.component_id = component_id
-        self.vehicle_firmware_type = vehicle_firmware_type
-        self.vehicle_type = vehicle_type
+    Uses https://mavlink.io/en/messages/common.html#MAV_CMD_DO_SET_SERVO
 
+    'servo_n' is the AUX port to set (assumes port is configured as a servo).
+        Valid values are 1-3 in a normal BlueROV2 setup, but can go up to 8
+        depending on Pixhawk type and firmware.
+    'microseconds' is the PWM pulse-width to set the output to. Commonly
+        between 1100 and 1900 microseconds.
 
-class MultiVehicleManager:
-    def _init_(self):
-        self.vehicles = []
-        self.ignore_vehicle_ids = set()
-        self.active_vehicle = None
-        self.gcs_heartbeat_enabled = True
-        self.gcs_heartbeat_rate_msecs = 1000  # GCS heartbeat rate in milliseconds
+    """
+    # master.set_servo(servo_n+8, microseconds) or:
+    master.mav.command_long_send(
+        master.target_system, master.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
+        0,            # first transmission of this command
+        servo_n + 8,  # servo instance, offset by 8 MAIN outputs
+        microseconds, # PWM pulse-width
+        0,0,0,0,0     # unused parameters
+    )
 
-    def get_vehicle_by_id(self, vehicle_id):
-        for vehicle in self.vehicles:
-            if vehicle.vehicle_id == vehicle_id:
-                return vehicle
-        return None
+# Create the connection
+master = mavutil.mavlink_connection('udpin:0.0.0.0:14660')
+# Wait a heartbeat before sending commands
+master.wait_heartbeat()
 
-    def _vehicle_heartbeat_info(self, link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type):
-
-        if vehicle_type == 0 and vehicle_firmware_type == mavutil.mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA:
-            vehicle_type = mavutil.mavlink.MAV_TYPE_QUADROTOR
-
-        if len(self.vehicles) > 0 and not self.multi_vehicle_enabled():
-            return
-        vehicle = Vehicle(link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type)
-        self.vehicles.append(vehicle)
-        self._send_gcs_heartbeat()
-        self.set_active_vehicle(vehicle)
-
-    def _send_gcs_heartbeat(self):
-        if not self.gcs_heartbeat_enabled:
-            return
-        while True:
-            for vehicle in self.vehicles:
-                mavlink_connection = vehicle.link
-                if mavlink_connection:
-                    mavlink_connection.mav.heartbeat_send(
-                        mavutil.mavlink.MAV_TYPE_GCS,  # MAV_TYPE
-                        mavutil.mavlink.MAV_AUTOPILOT_INVALID,  # MAV_AUTOPILOT
-                        mavutil.mavlink.MAV_MODE_MANUAL_ARMED,  # MAV_MODE
-                        0,  # custom mode
-                        mavutil.mavlink.MAV_STATE_ACTIVE  # MAV_STATE
-                    )
-            time.sleep(self.gcs_heartbeat_rate_msecs / 1000.0)
-
-    def set_active_vehicle(self, vehicle):
-        self.active_vehicle = vehicle
-
-
-link = mavutil.mavlink_connection('udp:127.0.0.1:14550')
-manager = MultiVehicleManager()
-manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,mavutil.mavlink.MAV_TYPE_QUADROTOR)
-import threading
-
-heartbeat_thread = threading.Thread(target=manager._send_gcs_heartbeat)
-heartbeat_thread.daemon = True
-heartbeat_thread.start()
+# command servo_1 to go from min to max in steps of 50us, over 2 seconds
+for us in range(1100, 1900, 50):
+    set_servo_pwm(1, us)
+    time.sleep(0.125)
