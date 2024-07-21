@@ -1,61 +1,100 @@
-import time
 from pymavlink import mavutil
+import time
 
-# Create the connection
-master = mavutil.mavlink_connection('udpin:0.0.0.0:14550')
 
-# Wait for the first heartbeat
-while True:
-    msg = master.recv_match(type='HEARTBEAT', blocking=True)
-    if msg:
-        break
+class Vehicle:
+    def _init_(self, link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type):
+        self.link = link
+        self.vehicle_id = vehicle_id
+        self.component_id = component_id
+        self.vehicle_firmware_type = vehicle_firmware_type
+        self.vehicle_type = vehicle_type
+        # Diğer gerekli başlatma işlemleri burada yapılabilir
 
-# Request parameter value
-master.mav.param_request_read_send(
-    master.target_system, master.target_component,
-    b'SURFACE_DEPTH',
-    -1
-)
 
-# Print old parameter value
-while True:
-    message = master.recv_match(type='PARAM_VALUE', blocking=True)
-    if message and message.param_id == b'SURFACE_DEPTH':
-        print('name: %s\tvalue: %f' % (message.param_id.decode("utf-8"), message.param_value))
-        break
+class MultiVehicleManager:
+    def _init_(self):
+        self.vehicles = []
+        self.ignore_vehicle_ids = set()
+        self.active_vehicle = None
+        self.gcs_heartbeat_enabled = True
+        self.gcs_heartbeat_rate_msecs = 1000  # GCS heartbeat rate in milliseconds
 
-time.sleep(1)
+    def get_vehicle_by_id(self, vehicle_id):
+        for vehicle in self.vehicles:
+            if vehicle.vehicle_id == vehicle_id:
+                return vehicle
+        return None
 
-# Set parameter value
-master.mav.param_set_send(
-    master.target_system, master.target_component,
-    b'SURFACE_DEPTH',
-    -12.0,  # New parameter value (float) to be set
-    mavutil.mavlink.MAV_PARAM_TYPE_REAL32
-)
+    def _vehicle_heartbeat_info(self, link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type):
+     #   if component_id != mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1:
+      #      if vehicle_id != 81 or component_id != 50:
+       #         print(
+        #            f"Bilinmeyen bileşenden gelen heartbeat yoksayılıyor: port:vehicleId:componentId:fwType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
+         #       return
+            # Bilinmeyen bileşenden gelen heartbeat yoksayılıyor
 
-# Wait for ACK (PARAM_VALUE message confirming the change)
-while True:
-    message = master.recv_match(type='PARAM_VALUE', blocking=True)
-    if message and message.param_id == b'SURFACE_DEPTH':
-        print('name: %s\tvalue: %f' % (message.param_id.decode("utf-8"), message.param_value))
-        break
+        if vehicle_type == 0 and vehicle_firmware_type == mavutil.mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA:
+            vehicle_type = mavutil.mavlink.MAV_TYPE_QUADROTOR
 
-time.sleep(1)
+        if len(self.vehicles) > 0 and not self.multi_vehicle_enabled():
+            return
+        if vehicle_id in self.ignore_vehicle_ids or self.get_vehicle_by_id(vehicle_id) or vehicle_id == 0:
+            return
 
-# Request parameter value again to confirm the change
-master.mav.param_request_read_send(
-    master.target_system, master.target_component,
-    b'SURFACE_DEPTH',
-    -1
-)
+       # if vehicle_type in [mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+        #                    mavutil.mavlink.MAV_TYPE_GIMBAL, mavutil.mavlink.MAV_TYPE_ADSB]:
+            # Bunlar araç değildir, bu yüzden bunlar için araç oluşturmayın
+         #   return
 
-# Print new value in RAM
-while True:
-    message = master.recv_match(type='PARAM_VALUE', blocking=True)
-    if message and message.param_id == b'SURFACE_DEPTH':
-        print('name: %s\tvalue: %f' % (message.param_id.decode("utf-8"), message.param_value))
-        break
+        print(
+            f"Yeni araç ekleniyor: link:vehicleId:componentId:vehicleFirmwareType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
 
-# Close the connection
-master.close()
+        vehicle = Vehicle(link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type)
+        self.vehicles.append(vehicle)
+
+        self._send_gcs_heartbeat()
+
+        if len(self.vehicles) > 1:
+            print(f"Araca Bağlandı: {vehicle_id}")
+        else:
+            self.set_active_vehicle(vehicle)
+
+    def _send_gcs_heartbeat(self):
+        if not self.gcs_heartbeat_enabled:
+            return
+
+        # Tüm bağlantılara GCS heartbeat gönderme
+        while True:
+            for vehicle in self.vehicles:
+                mavlink_connection = vehicle.link
+                if mavlink_connection:
+                    mavlink_connection.mav.heartbeat_send(
+                        mavutil.mavlink.MAV_TYPE_GCS,  # MAV_TYPE
+                        mavutil.mavlink.MAV_AUTOPILOT_INVALID,  # MAV_AUTOPILOT
+                        mavutil.mavlink.MAV_MODE_MANUAL_ARMED,  # MAV_MODE
+                        0,  # custom mode
+                        mavutil.mavlink.MAV_STATE_ACTIVE  # MAV_STATE
+                    )
+            time.sleep(self.gcs_heartbeat_rate_msecs / 1000.0)
+
+    def set_active_vehicle(self, vehicle):
+        self.active_vehicle = vehicle
+
+    #def multi_vehicle_enabled(self):
+        # Multi-vehicle özelliği etkin mi kontrol edin
+     #   return True
+
+
+# Örnek kullanım
+link = mavutil.mavlink_connection('udp:127.0.0.1:14550')
+manager = MultiVehicleManager()
+manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,
+                                mavutil.mavlink.MAV_TYPE_QUADROTOR)
+
+# GCS heartbeat gönderimini başlat
+import threading
+
+heartbeat_thread = threading.Thread(target=manager._send_gcs_heartbeat)
+heartbeat_thread.daemon = True
+heartbeat_thread.start()
