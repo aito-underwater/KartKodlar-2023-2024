@@ -1,5 +1,6 @@
-from pymavlink import mavutil
 import time
+
+from pymavlink import mavutil
 
 
 class Vehicle:
@@ -9,6 +10,7 @@ class Vehicle:
         self.component_id = component_id
         self.vehicle_firmware_type = vehicle_firmware_type
         self.vehicle_type = vehicle_type
+
 
 class MultiVehicleManager:
     def _init_(self):
@@ -33,15 +35,11 @@ class MultiVehicleManager:
             return
         if vehicle_id in self.ignore_vehicle_ids or self.get_vehicle_by_id(vehicle_id) or vehicle_id == 0:
             return
-
         print(
             f"Yeni araç ekleniyor: link:vehicleId:componentId:vehicleFirmwareType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
-
         vehicle = Vehicle(link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type)
         self.vehicles.append(vehicle)
-
         self._send_gcs_heartbeat()
-
         if len(self.vehicles) > 1:
             print(f"Araca Bağlandı: {vehicle_id}")
         else:
@@ -50,7 +48,6 @@ class MultiVehicleManager:
     def _send_gcs_heartbeat(self):
         if not self.gcs_heartbeat_enabled:
             return
-
         while True:
             for vehicle in self.vehicles:
                 mavlink_connection = vehicle.link
@@ -68,12 +65,10 @@ class MultiVehicleManager:
         self.active_vehicle = vehicle
 
 
-
 link = mavutil.mavlink_connection('udp:127.0.0.1:14550')
 manager = MultiVehicleManager()
 manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,
                                 mavutil.mavlink.MAV_TYPE_QUADROTOR)
-
 import threading
 
 heartbeat_thread = threading.Thread(target=manager._send_gcs_heartbeat)
