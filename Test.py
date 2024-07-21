@@ -33,17 +33,10 @@ class MultiVehicleManager:
 
         if len(self.vehicles) > 0 and not self.multi_vehicle_enabled():
             return
-        if vehicle_id in self.ignore_vehicle_ids or self.get_vehicle_by_id(vehicle_id) or vehicle_id == 0:
-            return
-        print(
-            f"Yeni araç ekleniyor: link:vehicleId:componentId:vehicleFirmwareType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
         vehicle = Vehicle(link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type)
         self.vehicles.append(vehicle)
         self._send_gcs_heartbeat()
-        if len(self.vehicles) > 1:
-            print(f"Araca Bağlandı: {vehicle_id}")
-        else:
-            self.set_active_vehicle(vehicle)
+        self.set_active_vehicle(vehicle)
 
     def _send_gcs_heartbeat(self):
         if not self.gcs_heartbeat_enabled:
