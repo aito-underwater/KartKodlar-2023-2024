@@ -9,8 +9,6 @@ class Vehicle:
         self.component_id = component_id
         self.vehicle_firmware_type = vehicle_firmware_type
         self.vehicle_type = vehicle_type
-        # Diğer gerekli başlatma işlemleri burada yapılabilir
-
 
 class MultiVehicleManager:
     def _init_(self):
@@ -27,12 +25,6 @@ class MultiVehicleManager:
         return None
 
     def _vehicle_heartbeat_info(self, link, vehicle_id, component_id, vehicle_firmware_type, vehicle_type):
-     #   if component_id != mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1:
-      #      if vehicle_id != 81 or component_id != 50:
-       #         print(
-        #            f"Bilinmeyen bileşenden gelen heartbeat yoksayılıyor: port:vehicleId:componentId:fwType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
-         #       return
-            # Bilinmeyen bileşenden gelen heartbeat yoksayılıyor
 
         if vehicle_type == 0 and vehicle_firmware_type == mavutil.mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA:
             vehicle_type = mavutil.mavlink.MAV_TYPE_QUADROTOR
@@ -41,11 +33,6 @@ class MultiVehicleManager:
             return
         if vehicle_id in self.ignore_vehicle_ids or self.get_vehicle_by_id(vehicle_id) or vehicle_id == 0:
             return
-
-       # if vehicle_type in [mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
-        #                    mavutil.mavlink.MAV_TYPE_GIMBAL, mavutil.mavlink.MAV_TYPE_ADSB]:
-            # Bunlar araç değildir, bu yüzden bunlar için araç oluşturmayın
-         #   return
 
         print(
             f"Yeni araç ekleniyor: link:vehicleId:componentId:vehicleFirmwareType:vehicleType {link.name} {vehicle_id} {component_id} {vehicle_firmware_type} {vehicle_type}")
@@ -64,7 +51,6 @@ class MultiVehicleManager:
         if not self.gcs_heartbeat_enabled:
             return
 
-        # Tüm bağlantılara GCS heartbeat gönderme
         while True:
             for vehicle in self.vehicles:
                 mavlink_connection = vehicle.link
@@ -81,18 +67,13 @@ class MultiVehicleManager:
     def set_active_vehicle(self, vehicle):
         self.active_vehicle = vehicle
 
-    #def multi_vehicle_enabled(self):
-        # Multi-vehicle özelliği etkin mi kontrol edin
-     #   return True
 
 
-# Örnek kullanım
 link = mavutil.mavlink_connection('udp:127.0.0.1:14550')
 manager = MultiVehicleManager()
 manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,
                                 mavutil.mavlink.MAV_TYPE_QUADROTOR)
 
-# GCS heartbeat gönderimini başlat
 import threading
 
 heartbeat_thread = threading.Thread(target=manager._send_gcs_heartbeat)
