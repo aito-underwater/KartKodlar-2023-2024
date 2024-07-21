@@ -60,8 +60,7 @@ class MultiVehicleManager:
 
 link = mavutil.mavlink_connection('udp:127.0.0.1:14550')
 manager = MultiVehicleManager()
-manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,
-                                mavutil.mavlink.MAV_TYPE_QUADROTOR)
+manager._vehicle_heartbeat_info(link, 1, mavutil.mavlink.MAV_COMP_ID_AUTOPILOT1, mavutil.mavlink.MAV_AUTOPILOT_GENERIC,mavutil.mavlink.MAV_TYPE_QUADROTOR)
 import threading
 
 heartbeat_thread = threading.Thread(target=manager._send_gcs_heartbeat)
